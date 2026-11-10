@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OMC 登录中心 · 自建第三方登录</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2314181B'/%3E%3Crect x='0' y='2' width='16' height='5' fill='%236FA84A'/%3E%3Crect x='0' y='7' width='16' height='9' fill='%2380573B'/%3E%3Crect x='3' y='9' width='2' height='2' fill='%23A8794F'/%3E%3Crect x='10' y='11' width='2' height='2' fill='%236E4A31'/%3E%3C/svg%3E">
+<style>
+:root{
+  --rock:#14181B;
+  --rock2:#1A1F24;
+  --panel:#1E2429;
+  --line:#2C343A;
+  --text:#E4E7E4;
+  --body:#B4BBB5;
+  --muted:#7C8580;
+  --grass:#6FA84A;
+  --grass2:#87C25C;
+  --soil:#A8794F;
+  --warn:#C0553F;
+  --ok:#4E9E6B;
+  --mono:Consolas,ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    linear-gradient(180deg,rgba(20,24,27,.94),rgba(20,24,27,.99)),
+    repeating-linear-gradient(0deg,#171C20 0 3px,#15191D 3px 6px);
+  color:var(--text);
+  font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+
+/* ---------- 顶部 ---------- */
+.top{border-bottom:1px solid var(--line);background:rgba(26,31,36,.72);backdrop-filter:blur(8px);position:sticky;top:0;z-index:8}
+.topin{padding:12px 0 14px;display:block}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.4px;font-size:15px}
+.brand svg{width:20px;height:20px;flex:0 0 auto}
+.brand span{color:var(--muted);font-weight:500;letter-spacing:0}
+.srv{margin-top:11px}
+.srvlab{display:block;font-size:12.5px;color:var(--muted);letter-spacing:.4px;margin-bottom:5px}
+.srvrow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.srvrow input{
+  flex:1 1 220px;min-width:0;background:var(--rock2);border:1px solid var(--line);
+  color:var(--text);font-family:var(--mono);font-size:16px;padding:9px 11px;border-radius:3px;
+}
+.srvrow input:focus{outline:none;border-color:var(--grass);background:#101417}
+.srvrow button{
+  flex:0 0 auto;background:var(--grass);border:1px solid #5D9139;color:#10160B;
+  font-weight:700;font-size:14px;padding:0 18px;min-height:44px;border-radius:3px;cursor:pointer;
+}
+.srvrow button:hover{background:var(--grass2)}
+.srvrow button:active{transform:translateY(1px)}
+.state{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:#5A6266;flex:0 0 auto}
+.dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(78,158,107,.18)}
+.dot.bad{background:var(--warn);box-shadow:0 0 0 3px rgba(192,85,63,.18)}
+.state b{color:var(--body);font-weight:600}
+
+/* ---------- 主体 ---------- */
+main{padding:22px 0 8px;display:block}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0 0 16px}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{
+  flex:1;background:transparent;border:0;border-bottom:2px solid transparent;
+  color:var(--muted);font-size:14.5px;font-weight:600;padding:12px 6px;cursor:pointer;
+  min-height:44px;
+}
+.tabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--grass);background:rgba(111,168,74,.06)}
+.f{margin-top:15px;padding:0 15px;display:block}
+.f.hide{display:none}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--body);margin-bottom:5px}
+.field input{
+  width:100%;background:var(--rock2);border:1px solid var(--line);color:var(--text);
+  font-size:16px;padding:10px 11px;border-radius:3px;
+}
+.field input:focus{outline:none;border-color:var(--grass);background:#101417}
+.hint{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+.go{
+  width:100%;background:var(--grass);border:1px solid #5D9139;color:#10160B;font-weight:700;
+  font-size:15px;padding:12px;border-radius:3px;cursor:pointer;min-height:46px;margin-top:3px;
+}
+.go:hover{background:var(--grass2)}
+.go[disabled]{background:#2C343A;border-color:#2C343A;color:var(--muted);cursor:not-allowed}
+.msg{margin:12px 15px 0;font-size:13.5px;line-height:1.6;border-radius:3px;padding:0}
+.msg.show{padding:10px 11px}
+.msg.err{background:rgba(192,85,63,.13);border:1px solid rgba(192,85,63,.45);color:#E6A494}
+.msg.ok{background:rgba(78,158,107,.13);border:1px solid rgba(78,158,107,.45);color:#A9DCBE}
+.msg.info{background:rgba(168,121,79,.13);border:1px solid rgba(168,121,79,.45);color:#DDBB98}
+
+/* ---------- 侧栏 ---------- */
+.side{margin-top:16px}
+.card{background:var(--rock2);border:1px solid var(--line);border-radius:4px;padding:14px 15px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:13px;letter-spacing:.6px;color:var(--muted);font-weight:600;text-transform:none}
+.who{display:flex;align-items:center;gap:11px}
+.face{
+  width:46px;height:46px;flex:0 0 auto;border-radius:3px;background:var(--panel);
+  border:1px solid var(--line);display:grid;place-items:center;
+  font-family:var(--mono);font-size:19px;font-weight:700;color:var(--grass);overflow:hidden;
+}
+.who .nm{font-size:16px;font-weight:700}
+.who .sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+.idle{color:var(--muted);font-size:13.5px;line-height:1.7}
+.kv{margin-top:12px;font-size:12.5px}
+.kv .r{display:grid;grid-template-columns:64px 1fr;gap:8px;padding:6px 0;border-top:1px dashed var(--line);align-items:baseline}
+.kv .k{color:var(--muted)}
+.kv .v{font-family:var(--mono);color:var(--body);word-break:break-all;font-size:12px;line-height:1.5}
+.cp{
+  margin-top:10px;width:100%;background:transparent;border:1px solid var(--line);color:var(--body);
+  font-size:13px;padding:9px;border-radius:3px;cursor:pointer;min-height:42px;
+}
+.cp:hover{border-color:var(--grass);color:var(--text)}
+.steps ol{margin:0;padding-left:20px;font-size:13.5px;color:var(--body);line-height:1.8}
+.steps li{margin-bottom:4px}
+.steps code{font-family:var(--mono);font-size:12px;background:#151A1D;border:1px solid var(--line);padding:1px 5px;border-radius:2px;color:var(--grass2);word-break:break-all}
+
+/* ---------- 说明 ---------- */
+.notes{padding:8px 0 0}
+.nh{display:flex;align-items:baseline;gap:10px;margin:26px 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.nh h2{margin:0;font-size:17px}
+.nh em{font-style:normal;font-size:12.5px;color:var(--muted)}
+.nlist{display:grid;grid-template-columns:1fr;gap:12px}
+.n{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:13px 14px}
+.n b{display:block;font-size:14px;margin-bottom:4px}
+.n p{margin:0;font-size:13.5px;color:var(--body);line-height:1.7}
+.n p code{font-family:var(--mono);font-size:12px;color:var(--grass2);word-break:break-all}
+.qa{margin-top:6px}
+.qa details{border-top:1px solid var(--line);padding:11px 0}
+.qa summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--text);list-style:none}
+.qa summary::before{content:"＋";color:var(--grass);display:inline-block;width:18px;font-weight:400}
+.qa details[open] summary::before{content:"−"}
+.qa p{margin:8px 0 0 18px;font-size:13.5px;color:var(--body);line-height:1.75}
+footer{border-top:1px solid var(--line);margin-top:26px;padding:16px 0 26px;color:var(--muted);font-size:12.5px;display:flex;gap:6px 18px;flex-wrap:wrap}
+
+@media(min-width:820px){
+  .topin{display:flex;align-items:flex-end;gap:22px}
+  .srv{flex:1;margin-top:0;min-width:0}
+  main{display:grid;grid-template-columns:1.32fr .82fr;gap:18px;align-items:start;padding-top:26px}
+  .side{margin-top:0}
+  .nlist{grid-template-columns:repeat(3,1fr)}
+  .wrap{padding:0 26px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topin">
+    <div class="brand">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" fill="#1B2126"/><rect x="2" y="2" width="12" height="4" fill="#6FA84A"/><rect x="2" y="6" width="12" height="8" fill="#80573B"/><rect x="5" y="8" width="2" height="2" fill="#A8794F"/><rect x="10" y="11" width="2" height="2" fill="#6E4A31"/></svg>
+      OMC 登录中心 <span>自建第三方登录</span>
+    </div>
+    <div class="srv">
+      <label class="srvlab" for="srv">你的登录服务地址</label>
+      <div class="srvrow">
+        <input id="srv" type="text" spellcheck="false" autocomplete="off" value="http://127.0.0.1:8080/api/yggdrasil">
+        <button id="btnConn" type="button">连接</button>
+      </div>
+      <div class="state"><span class="dot" id="dot"></span><span id="srvState">还没连过。先在电脑上把 <b>omc_auth_server.py</b> 跑起来，再点连接。</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<main>
+  <!-- ===== 左：账号操作 ===== -->
+  <section class="panel">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-tab="login">登录</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="reg">注册</button>
+    </div>
+
+    <form class="f" id="fLogin" autocomplete="off">
+      <div class="field">
+        <label for="lu">用户名 或 邮箱</label>
+        <input id="lu" type="text" placeholder="注册时填的那个名字" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="lp">密码</label>
+        <input id="lp" type="password" placeholder="至少 6 位">
+      </div>
+      <button class="go" id="btnLogin" type="submit">登录</button>
+      <div class="hint">登录只用来在这里验证账号能不能用、拿到角色名和 UUID。真正进游戏是在启动器里填地址登录。</div>
+    </form>
+
+    <form class="f hide" id="fReg" autocomplete="off">
+      <div class="field">
+        <label for="ru">用户名</label>
+        <input id="ru" type="text" placeholder="1-16 个字符，游戏里显示的就是它" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="re">邮箱</label>
+        <input id="re" type="email" placeholder="用来找回账号，也能当登录名" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="rp">密码</label>
+        <input id="rp" type="password" placeholder="至少 6 位">
+        <div class="hint">密码在你自己的电脑上用 PBKDF2-SHA256 加盐、十二万轮算过哈希才落盘，服务器这边看不到明文。</div>
+      </div>
+      <button class="go" id="btnReg" type="submit">注册这个账号</button>
+    </form>
+
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <!-- ===== 右：结果 + 步骤 ===== -->
+  <aside class="side">
+    <div class="card" id="cardWho">
+      <h3>当前账号</h3>
+      <div id="whoBody">
+        <div class="idle">还没登录。左边登录一下，这里会显示你的角色名、UUID 和有效期。</div>
+      </div>
+    </div>
+
+    <div class="card steps">
+      <h3>在启动器里怎么填</h3>
+      <ol>
+        <li>电脑上打开 OMC，进「设置」页找第三方登录那一栏。</li>
+        <li>服务商选「自建 Blessing Skin（自己填地址）」。</li>
+        <li>地址填下面这一行，然后保存。</li>
+        <li>回到账号页用刚注册的用户名和密码登录。</li>
+      </ol>
+      <button class="cp" id="btnCpAddr" type="button" data-cp="http://127.0.0.1:8080/api/yggdrasil">复制地址</button>
+    </div>
+  </aside>
+</main>
+
+<!-- ===== 说明 ===== -->
+<section class="notes">
+  <div class="nh"><h2>这套东西是什么</h2><em>没装后端，账号在你自己的电脑里</em></div>
+  <div class="nlist">
+    <div class="n">
+      <b>账号存在哪</b>
+      <p>存在 <code>thirdserver\users.json</code> 里，跟这台电脑上的启动器放一起。没有云端、没有第三方转发，换电脑要自己把文件带过去。</p>
+    </div>
+    <div class="n">
+      <b>接口是什么</b>
+      <p>标准 Yggdrasil：注册、登录、刷新、校验、角色查询五个端点。<code>/api/yggdrasil</code>、<code>/api/authlib-injector</code> 和空根路径都指向同一套。</p>
+    </div>
+    <div class="n">
+      <b>谁能连上</b>
+      <p>只有同一个局域网里的设备能直连（手机、另一台电脑）。跨网要用端口映射或内网穿透，把 8080 暴露出去，并且建议套一层 HTTPS。</p>
+    </div>
+  </div>
+
+  <div class="nh"><h2>常见卡住的地方</h2><em>按顺序排</em></div>
+  <div class="qa">
+    <details open>
+      <summary>点「连接」提示连不上</summary>
+      <p>三种可能：服务没跑（在工程目录执行 <code>python thirdserver\omc_auth_server.py</code>）、地址端口写错（默认 <code>8080</code>）、或者防火墙拦了。先在电脑上开个命令行跑 <code>curl http://127.0.0.1:8080/api/yggdrasil</code> 看有没有返回 JSON。</p>
+    </details>
+    <details>
+      <summary>页面提示「https 不能连 http」</summary>
+      <p>GitHub Pages 走的是 https，浏览器不允许 https 页面去请求 http 接口（混合内容）。三个解法：把本文件下载到本地双击打开；用启动器里登录；或者给服务套一层 HTTPS 反向代理再填 https 地址。</p>
+    </details>
+    <details>
+      <summary>注册提示用户名已存在 / 邮箱已注册</summary>
+      <p>同一个用户名和邮箱只能注册一次。忘记了就直接拿另一个名字注册，或者去 <code>users.json</code> 里把那条记录删掉再重来。</p>
+    </details>
+    <details>
+      <summary>登录成功但进游戏提示验证失败</summary>
+      <p>看启动器里填的地址是不是这台电脑当前的局域网 IP——换了 WiFi 之后 IP 会变，服务没重启但地址变了。启动器控制台会打出「局域网/别的机器填：http://x.x.x.x:8080/api/yggdrasil」，照着填。</p>
+    </details>
+    <details>
+      <summary>accessToken 多久过期</summary>
+      <p>三十小时。过期后启动器会自动 refresh 续期；refresh 也失败就得重新登录一次。</p>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <span>OMC 登录中心</span>
+  <span>Yggdrasil · 自建</span>
+  <span>账号数据只在你的电脑上</span>
+</footer>
+</div>
+
+<script>
+(function(){
+  var DEFAULT = 'http://127.0.0.1:8080/api/yggdrasil';
+  var st = {base: DEFAULT, ok: false, meta: null, profile: null};
+  var $ = function(id){ return document.getElementById(id); };
+  var srv = $('srv'), dot = $('dot'), srvState = $('srvState'), msg = $('msg');
+
+  function setMsg(kind, text){
+    msg.className = 'msg show ' + kind;
+    msg.textContent = text;
+  }
+  function clearMsg(){ msg.className = 'msg'; msg.textContent = ''; }
+
+  function normBase(v){
+    var s = (v || '').trim().replace(/\/+$/,'');
+    if(!s) return '';
+    if(!/^http(s)?:\/\//i.test(s)) s = 'http://' + s;
+    return s;
+  }
+
+  function mixedBlocked(base){
+    return (location.protocol === 'https:' && /^http:/i.test(base));
+  }
+
+  function fetchJSON(url, opt, ms){
+    opt = opt || {};
+    var ctl = new AbortController();
+    var t = setTimeout(function(){ ctl.abort(); }, ms || 8000);
+    opt.signal = ctl.signal;
+    return fetch(url, opt).then(function(r){
+      clearTimeout(t);
+      return r.text().then(function(txt){
+        var data = null;
+        try { data = txt ? JSON.parse(txt) : null; } catch(e){ data = {raw: txt}; }
+        return {status: r.status, data: data};
+      });
+    }, function(e){
+      clearTimeout(t);
+      throw e;
+    });
+  }
+
+  function errText(res){
+    if(!res) return '没有响应';
+    if(res.data && res.data.errorMessage) return res.data.errorMessage;
+    if(res.data && res.data.error) return String(res.data.error);
+    if(res.status === 0) return '浏览器拒绝了这次请求（多半是 https 页面连 http 服务）';
+    return '服务返回了 HTTP ' + res.status;
+  }
+
+  /* ---------- 连接检测 ---------- */
+  function connect(){
+    var base = normBase(srv.value);
+    if(!base){ setMsg('err','先把服务地址填上。'); return; }
+    srv.value = base;
+    st.base = base;
+    dot.className = 'dot';
+    srvState.textContent = '正在连接 ' + base + ' …';
+    $('btnConn').disabled = true;
+
+    if(mixedBlocked(base)){
+      dot.className = 'dot bad';
+      srvState.textContent = '这个页面是 https，连不了 http 地址。';
+      $('btnConn').disabled = false;
+      setMsg('info','浏览器拦下了这次请求：GitHub Pages 是 https，而你的服务是 http，两个协议不能混着调。下面三条办法任选一条——① 把本文件下载到本地双击打开（就是 file:// 环境，没有这个限制）；② 直接跳过这个页面，在启动器里用同样的地址登录；③ 给服务套一层 HTTPS 反代，再回来填 https 地址。');
+      return;
+    }
+
+    fetchJSON(base, {method:'GET'}, 7000).then(function(res){
+      $('btnConn').disabled = false;
+      if(res.status >= 200 && res.status < 300 && res.data && res.data.meta){
+        st.ok = true;
+        st.meta = res.data.meta;
+        dot.className = 'dot on';
+        var name = res.data.meta.serverName || '未命名服务';
+        var impl = res.data.meta.implementationName || 'yggdrasil';
+        srvState.innerHTML = '已连上 <b>' + esc(name) + '</b> · ' + esc(impl) +
+          (res.data.meta['feature.open_registration'] !== false ? ' · 开放注册' : ' · 不开放注册');
+        setMsg('ok','连上了。可以注册或登录了。');
+        $('btnCpAddr').setAttribute('data-cp', base);
+        $('btnCpAddr').textContent = '复制地址 ' + base;
+      } else {
+        st.ok = false;
+        dot.className = 'dot bad';
+        srvState.textContent = '有响应，但不像 Yggdrasil 服务（HTTP ' + res.status + '）。';
+        setMsg('err','这个地址回的不是 Yggdrasil 的根信息，检查一下路径是不是 /api/yggdrasil。');
+      }
+    }).catch(function(e){
+      $('btnConn').disabled = false;
+      st.ok = false;
+      dot.className = 'dot bad';
+      var aborted = (e && e.name === 'AbortError');
+      srvState.textContent = aborted ? '连不上：超时 7 秒没回应。' : '连不上这个地址。';
+      setMsg('err', aborted
+        ? '超时了。先确认服务在跑（python thirdserver\\omc_auth_server.py），端口 8080 没有被别的程序占。'
+        : '连不上。检查：服务在跑吗、IP 和端口对不对、防火墙放行了吗。');
+    });
+  }
+
+  /* ---------- 登录 ---------- */
+  function doLogin(ev){
+    ev.preventDefault();
+    var u = $('lu').value.trim(), p = $('lp').value;
+    if(!u || !p){ setMsg('err','用户名和密码都要填。'); return; }
+    if(!st.ok){ setMsg('err','先点右上角的「连接」，确认服务通了再登录。'); return; }
+    var b = $('btnLogin'); b.disabled = true;
+    setMsg('info','正在登录…');
+    fetchJSON(st.base + '/authserver/authenticate', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:u, password:p, clientToken:'omc-web'})
+    }, 12000).then(function(res){
+      b.disabled = false;
+      if(res.status === 200 && res.data && res.data.accessToken){
+        st.profile = res.data;
+        renderWho(res.data);
+        setMsg('ok','登录成功。下面这块就是你的角色信息，进游戏用同一个名字。');
+      } else {
+        st.profile = null;
+        setMsg('err', errText(res));
+      }
+    }).catch(function(e){
+      b.disabled = false;
+      setMsg('err','请求失败：' + (e && e.name === 'AbortError' ? '超时' : '网络断了') + '。服务还在跑吗？');
+    });
+  }
+
+  function renderWho(d){
+    var sp = d.selectedProfile || {};
+    var nm = sp.name || '';
+    var id = sp.id || '';
+    var fmt = id ? (id.slice(0,8) + '-' + id.slice(8,12) + '-' + id.slice(12,16) + '-' + id.slice(16,20) + '-' + id.slice(20)) : '';
+    var tok = d.accessToken || '';
+    var mask = tok ? (tok.slice(0,6) + ' ... ' + tok.slice(-4)) : '—';
+    $('whoBody').innerHTML =
+      '<div class="who"><div class="face">' + esc(nm.slice(0,1).toUpperCase() || '?') + '</div>' +
+      '<div><div class="nm">' + esc(nm) + '</div><div class="sub">已登录 · 有效期 30 小时</div></div></div>' +
+      '<div class="kv">' +
+        '<div class="r"><span class="k">角色名</span><span class="v">' + esc(nm) + '</span></div>' +
+        '<div class="r"><span class="k">UUID</span><span class="v">' + esc(fmt) + '</span></div>' +
+        '<div class="r"><span class="k">令牌</span><span class="v">' + esc(mask) + '</span></div>' +
+      '</div>' +
+      '<button class="cp" id="btnCpUUID" type="button" data-cp="' + esc(id) + '">复制 UUID</button>';
+  }
+
+  /* ---------- 注册 ---------- */
+  function doReg(ev){
+    ev.preventDefault();
+    var u = $('ru').value.trim(), e = $('re').value.trim(), p = $('rp').value;
+    if(!u){ setMsg('err','用户名要填。'); return; }
+    if(u.length > 16){ setMsg('err','用户名最多 16 个字符。'); return; }
+    if(e.indexOf('@') < 1){ setMsg('err','邮箱要填一个完整的，比如 name@example.com。'); return; }
+    if(p.length < 6){ setMsg('err','密码至少 6 位。'); return; }
+    if(!st.ok){ setMsg('err','先点右上角的「连接」，确认服务通了再注册。'); return; }
+    var b = $('btnReg'); b.disabled = true;
+    setMsg('info','正在注册…');
+    fetchJSON(st.base + '/authserver/register', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:u, email:e, password:p})
+    }, 12000).then(function(res){
+      b.disabled = false;
+      if(res.status === 200 && res.data && res.data.ok){
+        $('lu').value = res.data.username || u;
+        $('lp').value = p;
+        switchTab('login');
+        setMsg('ok','注册好了：' + (res.data.username || u) + '。已经填到左边登录框，点一下登录就能验一遍。');
+      } else {
+        setMsg('err', errText(res));
+      }
+    }).catch(function(er){
+      b.disabled = false;
+      setMsg('err','请求失败：' + (er && er.name === 'AbortError' ? '超时' : '网络断了') + '。服务还在跑吗？');
+    });
+  }
+
+  /* ---------- 标签页 / 复制 ---------- */
+  function switchTab(name){
+    var tabs = document.querySelectorAll('.tabs button');
+    for(var i=0;i<tabs.length;i++){
+      tabs[i].setAttribute('aria-selected', tabs[i].getAttribute('data-tab') === name ? 'true' : 'false');
+    }
+    $('fLogin').className = 'f' + (name === 'login' ? '' : ' hide');
+    $('fReg').className = 'f' + (name === 'reg' ? '' : ' hide');
+    clearMsg();
+  }
+
+  function copyText(txt, btn){
+    if(!txt){ return; }
+    var done = function(){
+      var old = btn.getAttribute('data-lbl') || btn.textContent;
+      btn.setAttribute('data-lbl', old);
+      btn.textContent = '已复制';
+      setTimeout(function(){ btn.textContent = old; }, 1200);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done, function(){ legacyCopy(txt); done(); });
+    } else {
+      legacyCopy(txt); done();
+    }
+  }
+  function legacyCopy(txt){
+    var ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  /* ---------- 绑定 ---------- */
+  $('btnConn').addEventListener('click', connect);
+  srv.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); connect(); } });
+  $('fLogin').addEventListener('submit', doLogin);
+  $('fReg').addEventListener('submit', doReg);
+  var tabs = document.querySelectorAll('.tabs button');
+  for(var j=0;j<tabs.length;j++){
+    (function(btn){
+      btn.addEventListener('click', function(){ switchTab(btn.getAttribute('data-tab')); });
+    })(tabs[j]);
+  }
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if(t && t.classList && t.classList.contains('cp')){
+      copyText(t.getAttribute('data-cp'), t);
+    }
+  });
+
+  if(mixedBlocked(normBase(srv.value))){
+    dot.className = 'dot bad';
+    srvState.innerHTML = '当前页面是 https，默认地址是 http，<b>点连接一定被拦</b>。先把本文件下载到本地打开，或改用启动器登录。';
+  }
+})();
+</script>
+</body>
+</html>
